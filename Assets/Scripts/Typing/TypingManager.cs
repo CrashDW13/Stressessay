@@ -28,13 +28,17 @@ public class TypingManager : MonoBehaviour
     private int _linesBeforeScrolling = 1;
     private int _lineCount = 0;
     private int _lineCharacterCount = 0;
-    
+    private int _currentIndex = 0;
+
+
 
     [Header("Randomness")]
     [Range(0f, 100f)]
-    [SerializeField] private float _ignoreInputOdds = 0; 
+    [SerializeField] private float _ignoreInputOdds = 0;
 
-    private int _currentIndex = 0;
+    [Header("Penalty")]
+    [SerializeField]
+    private float _typoStressPenalty;
 
     private void Start()
     {
@@ -87,7 +91,7 @@ public class TypingManager : MonoBehaviour
             else
             {
                 Debug.Log(_inputChar + " " + _textChars[_currentIndex]);
-
+                StressManager.AddStress(_typoStressPenalty);
                 return;
             }
         }
@@ -125,7 +129,7 @@ public class TypingManager : MonoBehaviour
                 {
                     _lineSize += _textMeshPro.textInfo.lineInfo[i].lineHeight; 
                 }
-                _textMeshPro.rectTransform.position = new Vector2(_textMeshPro.rectTransform.position.x, _textMeshPro.rectTransform.position.y +_lineSize) ;
+                _textMeshPro.rectTransform.position = new Vector2(_textMeshPro.rectTransform.position.x, _textMeshPro.rectTransform.position.y + (_lineSize * 1.3f));
                 _lineCount = 0;
             }
         }
