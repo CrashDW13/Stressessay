@@ -1,15 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 
 public class MicrophoneManager : MonoBehaviour
 {
     public static float Loudness = 0;
+    private float _previousLoudness; 
 
     private AudioClip _clipRecord;
     private string _device;
     private int _sampleWindow = 128;
     private bool _isRecording;
+
+    private int _currentFrame;
+    private int _totalFrames = 5;
     
     private void StartMicrophone()
     {
@@ -56,7 +61,7 @@ public class MicrophoneManager : MonoBehaviour
 
     private void Update()
     {
-        Loudness = LevelMax();
+        Loudness = Mathf.SmoothDamp(_previousLoudness, LevelMax(), ref _previousLoudness, 0.78f);
     }
 
 
@@ -78,6 +83,24 @@ public class MicrophoneManager : MonoBehaviour
     private void OnApplicationFocus(bool focus)
     {
         if (focus)
+        {
+            if (!_isRecording)
+            {
+                StartMicrophone();
+                _isRecording = true;
+            }
+        }
+
+        else
+        {
+            StopMicrophone();
+            _isRecording = false;
+        }
+    }
+
+    private void OnApplicationPause(bool pause)
+    {
+        if (pause)
         {
             if (!_isRecording)
             {

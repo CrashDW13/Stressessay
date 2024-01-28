@@ -21,6 +21,7 @@ public class TypingManager : MonoBehaviour
     private string _vanillaText;
 
     private char _previousInput = ' ';
+    private int _framesSinceLastInput = 3;
 
     [Header("Scrolling")]
     private int _totalLines = 0;
@@ -30,8 +31,6 @@ public class TypingManager : MonoBehaviour
     private int _lineCharacterCount = 0;
     private int _currentIndex = 0;
 
-
-
     [Header("Randomness")]
     [Range(0f, 100f)]
     [SerializeField] private float _ignoreInputOdds = 0;
@@ -39,9 +38,20 @@ public class TypingManager : MonoBehaviour
     [Header("Penalty")]
     [SerializeField]
     private float _typoStressPenalty;
+    public AnimationCurve _typoShakeAnimationCurve;
+
+    [Header("SFX")]
+    [SerializeField]
+    private AudioClip[] _typingSounds;
+    [SerializeField]
+    private AudioClip _spaceSound;
+    [SerializeField]
+    private AudioClip[] _typoSounds;
+    private AudioSource _audioSource;
 
     private void Start()
     {
+        _audioSource = GetComponent<AudioSource>();
         if (_textAsset != null)
         {
             _textMeshPro.text = _textAsset.text;
@@ -85,6 +95,15 @@ public class TypingManager : MonoBehaviour
             {
                 _currentIndex++;
                 _lineCharacterCount++;
+                if (_inputChar == ' ')
+                {
+                    _audioSource.PlayOneShot(_spaceSound);
+                }
+                else
+                {
+                    int _randomIndex = UnityEngine.Random.Range(0, _typingSounds.Length - 1);
+                    _audioSource.PlayOneShot(_typingSounds[_randomIndex]);
+                }
                 UpdateTextAppearance();
             }
 
@@ -92,6 +111,9 @@ public class TypingManager : MonoBehaviour
             {
                 Debug.Log(_inputChar + " " + _textChars[_currentIndex]);
                 StressManager.AddStress(_typoStressPenalty);
+                int _randomIndex = UnityEngine.Random.Range(0, _typoSounds.Length - 1);
+                _audioSource.PlayOneShot(_typoSounds[_randomIndex]);
+                CameraShake.Shake(_typoShakeAnimationCurve, 0.5f);
                 return;
             }
         }
@@ -101,7 +123,7 @@ public class TypingManager : MonoBehaviour
     {
         string _highlightedText = _vanillaText;
 
-        string _markdownHighlight = "<color=\"red\">";
+        string _markdownHighlight = "<color=\"orange\">";
         _highlightedText = _highlightedText.Insert(_currentIndex, _markdownHighlight);
         _highlightedText = _highlightedText.Insert(_currentIndex + 1 + _markdownHighlight.Length, "</color>");
 
@@ -113,10 +135,12 @@ public class TypingManager : MonoBehaviour
         }
 
         Debug.Log(_highlightedText);
+        _textMeshPro.text = _highlightedText;
 
-        int _totalLineCharacterCount = _textMeshPro.textInfo.lineInfo[_lineCount].characterCount;
+        int _totalLineCharacterCount = _textMeshPro.textInfo.lineInfo[_totalLines].characterCount;
+        Debug.Log(_lineCharacterCount);
         Debug.Log("Total Line Character Count " + _totalLineCharacterCount);
-        if (_lineCharacterCount >= _totalLineCharacterCount)
+        if (_lineCharacterCount == _totalLineCharacterCount)
         {
             Debug.Log("finished line");
             _lineCharacterCount = 0;
@@ -129,12 +153,11 @@ public class TypingManager : MonoBehaviour
                 {
                     _lineSize += _textMeshPro.textInfo.lineInfo[i].lineHeight; 
                 }
-                _textMeshPro.rectTransform.position = new Vector2(_textMeshPro.rectTransform.position.x, _textMeshPro.rectTransform.position.y + (_lineSize * 1.3f));
+                _textMeshPro.rectTransform.anchoredPosition3D = new Vector3(_textMeshPro.rectTransform.anchoredPosition3D.x, _textMeshPro.rectTransform.anchoredPosition3D.y + (_lineSize * 0.5f), 0f);
                 _lineCount = 0;
             }
         }
 
-        _textMeshPro.text = _highlightedText;
     }
 
 

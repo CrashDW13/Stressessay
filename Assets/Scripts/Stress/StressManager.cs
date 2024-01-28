@@ -11,7 +11,17 @@ public class StressManager : MonoBehaviour
 
     private void Update()
     {
-        _stress += _passiveIncrease;
+        if (MicrophoneManager.Loudness < 40)
+        {
+            _stress += _passiveIncrease;
+        }
+
+        else
+        {
+            _stress -= MicrophoneManager.Loudness * 0.005f;
+        }
+
+        _stress = Mathf.Clamp(_stress, 0, 100);
 
         if (_stress > 100)
         {
